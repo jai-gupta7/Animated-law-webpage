@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First Light R2 · Style test</title>
+  <meta name="description" content="Style test for the First Light pilot: the same kitchen and street rendered as ink and watercolour (A) and as a paper world (C), on one synced timeline.">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+  </script>
+  <style>
+    :root { --ink: #14171c; --paper: #f5f1ea; --muted: #b9bfcb; --gold: #d9b36c; --night: #0b0f1a; }
+    * { box-sizing: border-box; margin: 0; }
+    body { background: var(--night); color: var(--paper); font: 400 1rem/1.5 "Hanken Grotesk", system-ui, sans-serif; min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }
+    header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; padding: 16px 20px 10px; }
+    h1 { font: 300 1.7rem/1.1 "Newsreader", Georgia, serif; }
+    h1 em { color: var(--gold); }
+    header p { color: var(--muted); font-size: 0.95rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 10px; min-height: 0; }
+    .view { position: relative; min-height: 320px; height: calc(100vh - 170px); border-radius: 4px; overflow: hidden; background: #000; }
+    .view canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; }
+    .label { position: absolute; left: 12px; top: 12px; right: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; pointer-events: none; }
+    .label b { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--paper); color: var(--ink); font-weight: 700; }
+    .label span { font: 400 1.2rem/1.2 "Newsreader", Georgia, serif; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8); }
+    .label a { pointer-events: auto; margin-left: auto; padding: 8px 12px; min-height: 44px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(11, 15, 26, 0.7); color: var(--paper); font-weight: 600; font-size: 0.85rem; text-decoration: none; }
+    .label a:hover { color: var(--gold); }
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 20px 16px; }
+    .controls button, .controls a { min-height: 44px; padding: 0 16px; border-radius: 4px; border: 1px solid rgba(245, 241, 234, 0.4); background: none; color: var(--paper); font: 600 0.92rem/1 inherit; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; }
+    .controls #play { background: var(--gold); color: var(--ink); border-color: #8a6526; }
+    .controls button:hover, .controls a:hover { border-color: var(--gold); }
+    .controls label { font-weight: 600; }
+    .controls input[type="range"] { flex: 1 1 240px; accent-color: var(--gold); min-height: 44px; }
+    .controls output { min-width: 9.5em; color: var(--muted); }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .view { height: 58vh; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>First Light · <em>R2 style test</em></h1>
+    <p>The same kitchen and street, on one timeline. Drag the slider or press Play; point at either view to move both cameras.</p>
+  </header>
+  <main class="grid" id="grid">
+    <figure class="view">
+      <canvas id="viewA" aria-label="Look A, ink and watercolour"></canvas>
+      <figcaption class="label"><b>A</b><span>Ink and watercolour</span><a href="test.html?style=ink">Open as a page</a></figcaption>
+    </figure>
+    <figure class="view">
+      <canvas id="viewC" aria-label="Look C, paper world"></canvas>
+      <figcaption class="label"><b>C</b><span>Paper world</span><a href="test.html?style=paper">Open as a page</a></figcaption>
+    </figure>
+  </main>
+  <div class="controls">
+    <button type="button" id="play">Play the journey</button>
+    <label for="t">Journey</label>
+    <input id="t" type="range" min="0" max="2" step="0.001" value="0">
+    <output id="where" for="t">Kitchen</output>
+    <button type="button" id="flip" aria-pressed="false">Turn the letter over</button>
+    <a href="../first-light/">R1 for comparison</a>
+  </div>
+  <script type="module">
+    import { createWorld, LAST } from './world.js';
+    const worlds = [createWorld(document.getElementById('viewA'), { style: 'ink' }), createWorld(document.getElementById('viewC'), { style: 'paper' })];
+    window.__r2 = worlds; // inspection hook
+    const range = document.getElementById('t'), where = document.getElementById('where'), play = document.getElementById('play');
+    const label = (p) => (p < 0.5 ? 'Kitchen' : p < 1.5 ? 'Out into the street' : 'Down the street');
+    const set = (p) => { worlds.forEach((w) => w.setTarget(p)); where.textContent = label(p); };
+    range.addEventListener('input', () => { stopPlay(); set(+range.value); });
+    let anim = 0;
+    function stopPlay() { cancelAnimationFrame(anim); anim = 0; play.textContent = 'Play the journey'; }
+    play.addEventListener('click', () => {
+      if (anim) return stopPlay();
+      let from = +range.value >= LAST - 0.01 ? 0 : +range.value;
+      if (from === 0) { range.value = 0; set(0); }
+      const t0 = performance.now(), dur = 9000 * (LAST - from) / LAST;
+      play.textContent = 'Pause';
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / dur), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+        const p = from + (LAST - from) * e;
+        range.value = p; set(p);
+        if (k < 1) anim = requestAnimationFrame(step); else stopPlay();
+      };
+      anim = requestAnimationFrame(step);
+    });
+    const flip = document.getElementById('flip');
+    flip.addEventListener('click', () => {
+      const on = flip.getAttribute('aria-pressed') !== 'true';
+      flip.setAttribute('aria-pressed', String(on));
+      flip.textContent = on ? 'Turn the letter back' : 'Turn the letter over';
+      worlds.forEach((w) => w.flip(on));
+    });
+    const grid = document.getElementById('grid');
+    grid.addEventListener('pointermove', (e) => {
+      const r = e.target.closest('.view')?.getBoundingClientRect();
+      if (!r || e.pointerType !== 'mouse') return;
+      worlds.forEach((w) => w.setPointer(((e.clientX - r.left) / r.width) * 2 - 1, -(((e.clientY - r.top) / r.height) * 2 - 1)));
+    });
+    grid.addEventListener('pointerleave', () => worlds.forEach((w) => w.setPointer(0, 0)));
+    new ResizeObserver(() => worlds.forEach((w) => w.resize())).observe(grid);
+  </script>
+</body>
+</html>

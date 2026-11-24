@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en" class="js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First Light R2 · Style test page</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  <!-- R1's page styles are reused unchanged, so only the 3D look differs -->
+  <link rel="stylesheet" href="../first-light/styles.css">
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+  </script>
+</head>
+<body data-scene="0">
+  <canvas id="world" aria-hidden="true"></canvas>
+  <div class="shade shade--v" aria-hidden="true"></div>
+  <div class="shade shade--l" aria-hidden="true"></div>
+  <div class="shade shade--b" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html">Ashgrove <span>&amp;</span> Penn</a>
+    <div class="top-actions">
+      <a class="call" href="tel:+18005550142"><span class="call__num">(800) 555-0142</span></a>
+      <a class="btn btn--primary btn--sm" href="../first-light/#review">Free case review</a>
+    </div>
+  </header>
+
+  <main>
+    <section id="top" class="beat beat--hero" aria-labelledby="h-top">
+      <div class="panel">
+        <p class="eyebrow">Social Security Disability lawyers · <span id="lookName"></span></p>
+        <h1 id="h-top">A denial letter is <em>not the end of <span class="nowrap">your claim.</span></em></h1>
+        <p class="lede">Many claims are turned down at first. We help you appeal, get ready for your hearing and claim the benefits you've earned. <strong>No fee unless we win.</strong></p>
+        <fieldset class="qbar">
+          <legend>Where are you in your claim?</legend>
+          <div class="qbar__answers">
+            <button type="button" data-go="1">I haven't applied yet</button>
+            <button type="button" data-go="1">My application was denied</button>
+            <button type="button" data-go="1">My appeal was denied</button>
+            <button type="button" data-go="1">I have a hearing date</button>
+          </div>
+        </fieldset>
+        <div class="hero-links">
+          <button type="button" class="chip" id="flipBtn" aria-pressed="false">Turn the letter over</button>
+          <a class="link" href="index.html">Back to the side-by-side test</a>
+        </div>
+      </div>
+      <p class="hint" aria-hidden="true">Scroll to follow the letter</p>
+    </section>
+
+    <section class="beat" aria-labelledby="h-denial">
+      <div class="panel">
+        <p class="eyebrow">01 · After a denial</p>
+        <h2 id="h-denial">The letter says what they decided. <em>Not what happens next.</em></h2>
+        <p>You usually have 60 days to ask for a second look, called reconsideration. We read the decision, find what was missing and file the appeal for you.</p>
+        <ol class="steps">
+          <li>We read your decision letter with you</li>
+          <li>We gather the medical records that were missing</li>
+          <li>We file your appeal on time</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="beat" aria-labelledby="h-more">
+      <div class="panel">
+        <p class="eyebrow">Style test ends here</p>
+        <h2 id="h-more">Down the street, <em>the crossroads.</em></h2>
+        <p>This test covers the kitchen and the street. The full journey, to the firm's door and the form, is in R1.</p>
+        <p><a class="link" href="index.html">Compare A and C side by side</a></p>
+        <p><a class="link" href="../first-light/">Open R1, the full journey</a></p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { createWorld, LAST } from './world.js';
+    const style = new URLSearchParams(location.search).get('style') === 'paper' ? 'paper' : 'ink';
+    document.getElementById('lookName').textContent = style === 'paper' ? 'Look C, paper world' : 'Look A, ink and watercolour';
+    document.title = `First Light R2 · ${style === 'paper' ? 'C Paper world' : 'A Ink and watercolour'}`;
+    const world = createWorld(document.getElementById('world'), { style, panels: true, onReady: () => document.documentElement.classList.add('ready') });
+    window.__r2 = world;
+    const beats = [...document.querySelectorAll('.beat')];
+    let centers = [];
+    const read = () => {
+      const vc = scrollY + innerHeight / 2;
+      let k = 0;
+      while (k < centers.length - 2 && vc >= centers[k + 1]) k++;
+      const t = Math.min(LAST, Math.max(0, k + (vc - centers[k]) / (centers[k + 1] - centers[k])));
+      world.setTarget(t);
+      document.body.dataset.scene = Math.round(t);
+    };
+    const measure = () => { centers = beats.map((b) => b.offsetTop + b.offsetHeight / 2); read(); };
+    addEventListener('scroll', read, { passive: true });
+    addEventListener('resize', () => { measure(); world.resize(); });
+    measure();
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -18% 0px' });
+    document.querySelectorAll('.panel').forEach((p) => io.observe(p));
+    document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => scrollTo({ top: centers[1] - innerHeight / 2, behavior: 'smooth' })));
+    const flip = document.getElementById('flipBtn');
+    flip.addEventListener('click', () => {
+      const on = flip.getAttribute('aria-pressed') !== 'true';
+      flip.setAttribute('aria-pressed', String(on));
+      flip.textContent = on ? 'Turn the letter back' : 'Turn the letter over';
+      world.flip(on);
+    });
+    addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') world.setPointer((e.clientX / innerWidth) * 2 - 1, -((e.clientY / innerHeight) * 2 - 1)); }, { passive: true });
+  </script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ashgrove & Penn · First Light (prototype)</title>
+  <meta name="description" content="Prototype landing page for Social Security Disability claims: a 3D walk from night to first light that follows a denial letter to a free case review. Placeholder firm.">
+  <meta name="robots" content="noindex">
+  <script>
+    // Decide before first paint: JS on, and whether to skip the 3D (saved choice, data saver, very small devices)
+    (function () {
+      var r = document.documentElement, lite = false;
+      r.classList.replace('no-js', 'js');
+      try { var s = localStorage.getItem('fl-lite'); if (s === '1') lite = true; if (s === '0') lite = false; else if (s === null) throw 0; }
+      catch (e) { lite = !!(navigator.connection && navigator.connection.saveData) || (navigator.deviceMemory && navigator.deviceMemory <= 2); }
+      if (lite) r.classList.add('lite');
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body data-scene="0">
+  <a class="skip" href="#review">Skip to the free case review form</a>
+  <canvas id="world" aria-hidden="true"></canvas>
+  <div class="sky-lite" aria-hidden="true"></div>
+  <div class="shade shade--v" aria-hidden="true"></div>
+  <div class="shade shade--l" aria-hidden="true"></div>
+  <div class="shade shade--r" aria-hidden="true"></div>
+  <div class="shade shade--b" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#top">Ashgrove <span>&amp;</span> Penn</a>
+    <div class="top-actions">
+      <button type="button" class="ghost sound" id="soundBtn" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Sound off</span></button>
+      <a class="call" href="tel:+18005550142"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg><span class="call__num">(800) 555-0142</span></a>
+      <a class="btn btn--primary btn--sm" href="#review">Free case review</a>
+    </div>
+  </header>
+
+  <nav class="road" aria-label="Your claim, step by step">
+    <div class="road__line" aria-hidden="true"><span class="road__fill"></span></div>
+    <ol>
+      <li><button type="button" data-go="0" aria-current="step"><span>Start</span></button></li>
+      <li><button type="button" data-go="1"><span>After a denial</span></button></li>
+      <li><button type="button" data-go="2"><span>Choose your path</span></button></li>
+      <li><button type="button" data-go="3"><span>Your hearing</span></button></li>
+      <li><button type="button" data-go="4"><span>People we've helped</span></button></li>
+      <li><button type="button" data-go="5"><span>Where we help</span></button></li>
+      <li><button type="button" data-go="6"><span>Free case review</span></button></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- 0 · night, the kitchen table -->
+    <section id="top" class="beat beat--hero" data-beat="0" aria-labelledby="h-top">
+      <div class="panel">
+        <p class="eyebrow">Social Security Disability lawyers</p>
+        <h1 id="h-top">A denial letter is <em>not the end of <span class="nowrap">your claim.</span></em></h1>
+        <p class="lede">Many claims are turned down at first. We help you appeal, get ready for your hearing and claim the benefits you've earned. <strong>No fee unless we win.</strong></p>
+        <fieldset class="qbar">
+          <legend>Where are you in your claim?</legend>
+          <div class="qbar__answers">
+            <button type="button" data-stage="not-applied" aria-pressed="false">I haven't applied yet</button>
+            <button type="button" data-stage="denied" aria-pressed="false">My application was denied</button>
+            <button type="button" data-stage="appeal-denied" aria-pressed="false">My appeal was denied</button>
+            <button type="button" data-stage="hearing" aria-pressed="false">I have a hearing date</button>
+          </div>
+        </fieldset>
+        <div class="hero-links">
+          <button type="button" class="chip needs-3d" id="flipBtn" aria-pressed="false">Turn the letter over</button>
+          <a class="link" href="#review">Skip to your free case review</a>
+        </div>
+        <div id="letterBack" class="letter-back" hidden>
+          <p><strong>On the back of the letter:</strong> what happens next. 1. Ask for a second look. 2. Add the missing records. 3. Get ready for your hearing. Start with a free case review.</p>
+        </div>
+      </div>
+      <p class="hint" aria-hidden="true">Scroll to follow the letter</p>
+    </section>
+
+    <!-- 1 · the street -->
+    <section id="denial" class="beat" data-beat="1" aria-labelledby="h-denial">
+      <div class="panel">
+        <p class="here" hidden>You are here</p>
+        <p class="eyebrow">01 · After a denial</p>
+        <h2 id="h-denial">The letter says what they decided. <em>Not what happens next.</em></h2>
+        <p>You usually have 60 days to ask for a second look, called reconsideration. We read the decision, find what was missing and file the appeal for you.</p>
+        <ol class="steps">
+          <li>We read your decision letter with you</li>
+          <li>We gather the medical records that were missing</li>
+          <li>We file your appeal on time</li>
+        </ol>
+        <a class="link" href="#review">Get a free case review</a>
+      </div>
+    </section>
+
+    <!-- 2 · the crossroads -->
+    <section id="paths" class="beat" data-beat="2" aria-labelledby="h-paths">
+      <div class="panel">
+        <p class="here" hidden>You are here</p>
+        <p class="eyebrow">02 · Choose your path</p>
+        <h2 id="h-paths">Four roads lead to benefits. <em>We know each one.</em></h2>
+        <p class="note needs-3d">Point at a signpost, or choose below.</p>
+        <ul class="paths">
+          <li><button type="button" aria-expanded="false" aria-controls="p-ssdi"><b>SSDI</b> Social Security Disability Insurance</button>
+            <p id="p-ssdi" hidden>For people who worked and paid Social Security taxes, and can no longer work because of a medical condition.</p></li>
+          <li><button type="button" aria-expanded="false" aria-controls="p-ssi"><b>SSI</b> Supplemental Security Income</button>
+            <p id="p-ssi" hidden>For adults and children with limited income and savings, whether or not they have worked.</p></li>
+          <li><button type="button" aria-expanded="false" aria-controls="p-appeals"><b>Appeals</b> After a denial</button>
+            <p id="p-appeals" hidden>Reconsideration with the evidence that was missing the first time, filed before the deadline.</p></li>
+          <li><button type="button" aria-expanded="false" aria-controls="p-hearings"><b>Hearings</b> Before a judge</button>
+            <p id="p-hearings" hidden>We prepare your records, your witnesses and you, and we stand beside you at the hearing.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 3 · the offices -->
+    <section id="hearing" class="beat" data-beat="3" aria-labelledby="h-hearing">
+      <div class="panel">
+        <p class="here" hidden>You are here</p>
+        <p class="eyebrow">03 · Your hearing</p>
+        <h2 id="h-hearing">Our lights are on <em>before the day starts.</em></h2>
+        <p>A hearing usually comes after a long wait. The attorney who prepares your case is the one who goes with you.</p>
+        <p class="note needs-3d">Point at a lit window to meet who works there.</p>
+        <ul class="team">
+          <li><button type="button" aria-expanded="false" aria-controls="a-1"><span class="avatar" aria-hidden="true">TA</span><span><b>Thomas Ashgrove</b> Founding attorney</span></button>
+            <p id="a-1" hidden>Has represented disability claimants at hearings for many years. Sample profile.</p></li>
+          <li><button type="button" aria-expanded="false" aria-controls="a-2"><span class="avatar" aria-hidden="true">HP</span><span><b>Helen Penn</b> Partner, appeals</span></button>
+            <p id="a-2" hidden>Leads reconsideration appeals and finds the records a first application missed. Sample profile.</p></li>
+          <li><button type="button" aria-expanded="false" aria-controls="a-3"><span class="avatar" aria-hidden="true">DO</span><span><b>Daniel Ortiz</b> Hearing attorney</span></button>
+            <p id="a-3" hidden>Prepares clients and witnesses for hearings, in person, by phone or by video. Sample profile.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 4 · porch lights -->
+    <section id="stories" class="beat" data-beat="4" aria-labelledby="h-stories">
+      <div class="panel">
+        <p class="eyebrow">04 · People we've helped</p>
+        <h2 id="h-stories">One porch light <em>at a time.</em></h2>
+        <ul class="reviews">
+          <li><figure>
+            <p class="stars" aria-label="Rated 5 out of 5">★★★★★</p>
+            <blockquote>“I'd been denied twice. They told me exactly what was missing and got it in front of the judge.”</blockquote>
+            <figcaption>Maria T. · SSDI, approved at hearing <span class="tag">Sample review</span></figcaption>
+          </figure></li>
+          <li><figure>
+            <p class="stars" aria-label="Rated 5 out of 5">★★★★★</p>
+            <blockquote>“Someone called me back the same afternoon. I wasn't on my own anymore.”</blockquote>
+            <figcaption>James R. · SSI for his son <span class="tag">Sample review</span></figcaption>
+          </figure></li>
+        </ul>
+        <p class="fine">Sample reviews for this prototype. Past results do not guarantee a future outcome.</p>
+      </div>
+    </section>
+
+    <!-- 5 · the map of lights -->
+    <section id="where" class="beat" data-beat="5" aria-labelledby="h-where">
+      <div class="panel">
+        <p class="eyebrow">05 · Where we help</p>
+        <h2 id="h-where">Three offices. <em>One federal program.</em></h2>
+        <div class="finder">
+          <label for="f-state">Which state do you live in?</label>
+          <select id="f-state"><option value="">Choose your state</option></select>
+          <p id="stateResult" class="finder__result" role="status" aria-live="polite"></p>
+        </div>
+        <ul class="offices">
+          <li><b>Tampa, FL</b> Sample office</li>
+          <li><b>Atlanta, GA</b> Sample office</li>
+          <li><b>Charlotte, NC</b> Sample office</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 6 · first light, the firm's door -->
+    <section id="review" class="beat beat--form" data-beat="6" aria-labelledby="h-review">
+      <div class="card">
+        <form id="reviewForm" novalidate method="post" action="#">
+          <p class="eyebrow eyebrow--dark">06 · Your free case review</p>
+          <h2 id="h-review">First light. <em>Let's start your free case review.</em></h2>
+          <ul class="assure">
+            <li>No fee unless we win</li>
+            <li>Call-back within one business hour</li>
+            <li>Free, no obligation</li>
+          </ul>
+          <div class="field">
+            <label for="f-name">Your name</label>
+            <input id="f-name" name="name" autocomplete="name" required aria-describedby="name-err">
+            <p class="err" id="name-err" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-phone">Phone number</label>
+            <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required aria-describedby="phone-err">
+            <p class="err" id="phone-err" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-email">Email <span class="opt">(optional)</span></label>
+            <input id="f-email" name="email" type="email" autocomplete="email" aria-describedby="email-err">
+            <p class="err" id="email-err" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-stage">Where are you in your claim?</label>
+            <select id="f-stage" name="stage" required aria-describedby="stage-err">
+              <option value="">Choose one</option>
+              <option value="not-applied">I haven't applied yet</option>
+              <option value="denied">My application was denied</option>
+              <option value="appeal-denied">My appeal was denied</option>
+              <option value="hearing">I have a hearing date</option>
+            </select>
+            <p class="err" id="stage-err" hidden></p>
+          </div>
+          <div class="field field--check">
+            <input id="f-consent" name="consent" type="checkbox" required aria-describedby="consent-err">
+            <label for="f-consent">You can call or text me about my claim.</label>
+            <p class="err" id="consent-err" hidden></p>
+          </div>
+          <button type="submit" class="btn btn--primary btn--wide" id="submitBtn">Request my free case review</button>
+          <p class="fine">Sending this form does not create an attorney–client relationship. Please don't include private medical details here. <strong>Prototype: nothing is sent.</strong></p>
+          <p class="fine">Prefer to talk? <a href="tel:+18005550142">Call (800) 555-0142</a>.</p>
+        </form>
+        <div id="reviewDone" class="done" hidden>
+          <p class="eyebrow eyebrow--dark">Sent · Sample confirmation</p>
+          <h2 id="doneTitle" tabindex="-1">Thank you, <span id="doneName"></span>. <em>Your letter is on its way.</em></h2>
+          <p>An attorney from our office will call you within one business hour, during office hours. Keep your decision letter close by.</p>
+          <p class="fine">Prototype: nothing was sent. This is sample content for a placeholder firm.</p>
+          <button type="button" class="btn btn--ghost-dark" id="againBtn">Start again</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p class="brand brand--foot">Ashgrove <span>&amp;</span> Penn</p>
+    <p><strong>Attorney advertising.</strong> This is a design prototype for a placeholder firm. Ashgrove &amp; Penn is not a real firm, and every name, review, office and phone number here is a sample.</p>
+    <p>Using this site or sending the form does not create an attorney–client relationship. Past results do not guarantee a future outcome.</p>
+    <p class="foot__actions"><button type="button" class="ghost" data-lite-toggle>Turn off the 3D view</button></p>
+  </footer>
+
+  <div class="callbar" aria-label="Quick actions">
+    <a class="btn btn--outline" href="tel:+18005550142">Call now</a>
+    <a class="btn btn--primary" href="#review">Free case review</a>
+  </div>
+
+  <div class="gl-status" id="glStatus" role="status" hidden><p></p><button type="button" class="ghost" data-lite-toggle>Simplified view</button></div>
+  <p id="announce" class="sr-only" aria-live="polite"></p>
+  <noscript><p class="noscript">This prototype needs JavaScript for the 3D view and to try the form. All of its content is readable below.</p></noscript>
+
+  <script type="module" src="ui.js"></script>
+</body>
+</html>
